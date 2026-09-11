@@ -1,4 +1,4 @@
-const CACHE_NAME = "not-crying-superhero-v1";
+const CACHE_NAME = "not-crying-superhero-v2-emoji";
 const ASSETS = [
   "./",
   "./index.html",
