@@ -1,0 +1,379 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#8e6f5a" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="不哭哭超人日記" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-192.svg" />
+<title>不哭哭超人日記</title>
+<style>
+  :root{
+    --paper:#fbf4e6;
+    --ink:#2d2a26;
+    --accent:#e16f7c;
+    --cover:#8e6f5a;
+    --shadow:rgba(60,45,30,.22);
+  }
+  *{box-sizing:border-box}
+  html,body{overscroll-behavior:none}
+  body{
+    margin:0;min-height:100vh;
+    font-family:"PingFang TC","Noto Sans TC",system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 15% 15%,rgba(255,255,255,.55),transparent 22%),
+      repeating-linear-gradient(28deg,rgba(255,255,255,.03) 0 2px,rgba(0,0,0,.018) 2px 4px),
+      #cbb79d;
+    padding:22px;
+    padding-top:max(22px, env(safe-area-inset-top));
+    padding-bottom:max(22px, env(safe-area-inset-bottom));
+  }
+  .app{width:min(1180px,100%);margin:auto}
+  .topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .title{font-size:clamp(22px,4vw,34px);font-weight:900}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{
+    border:0;border-radius:999px;padding:10px 15px;font-weight:800;cursor:pointer;
+    background:white;color:#3d342c;box-shadow:0 5px 15px rgba(0,0,0,.09)
+  }
+  .btn.primary{background:#3d342c;color:white}
+  .btn.soft{background:#fff8f2}
+  .btn.danger{background:#fff0f0;color:#a22}
+  .btn.install{background:#e16f7c;color:white}
+  .btn:disabled{opacity:.4}
+  .hidden{display:none!important}
+  .panel{
+    min-height:680px;border-radius:20px;overflow:hidden;
+    box-shadow:0 28px 60px var(--shadow);
+    border:1px solid rgba(77,57,38,.14)
+  }
+
+  .cover{
+    display:grid;grid-template-columns:1.1fr .9fr;
+    background:
+      linear-gradient(120deg,rgba(255,255,255,.12),transparent 28%),
+      repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0 3px,rgba(0,0,0,.02) 3px 6px),
+      var(--cover);
+  }
+  .cover-preview{padding:50px;display:flex;align-items:center;justify-content:center}
+  .cover-card{
+    width:min(500px,100%);aspect-ratio:3/4;border-radius:18px;padding:42px;position:relative;overflow:hidden;
+    background:
+      linear-gradient(145deg,rgba(255,255,255,.10),transparent 30%),
+      repeating-linear-gradient(35deg,rgba(255,255,255,.025) 0 2px,rgba(0,0,0,.018) 2px 4px),
+      var(--cover);
+    box-shadow:0 25px 45px rgba(0,0,0,.25);display:flex;flex-direction:column;justify-content:space-between;color:white
+  }
+  .cover-card::before{content:"";position:absolute;left:22px;top:0;bottom:0;width:8px;background:rgba(0,0,0,.16)}
+  .cover-photo{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:14px;display:none}
+  .cover-text h1{font-size:clamp(34px,5vw,58px);margin:0 0 10px}
+  .cover-text p{margin:0;font-size:18px;opacity:.9}
+  .cover-editor{padding:42px;background:rgba(255,250,240,.95);display:flex;flex-direction:column;gap:18px}
+
+  .field label{display:block;font-size:13px;font-weight:900;color:#766b5f;margin-bottom:8px}
+  input[type=text], textarea, input[type=color]{
+    width:100%;font:inherit;color:var(--ink);padding:10px;border:1px solid rgba(60,51,40,.15);
+    border-radius:12px;background:rgba(255,255,255,.45)
+  }
+  textarea{min-height:150px;resize:vertical;line-height:1.75}
+
+  .calendar-view{
+    padding:34px;background:
+      radial-gradient(ellipse at 20% 10%,rgba(255,255,255,.75),transparent 18%),
+      radial-gradient(ellipse at 80% 70%,rgba(117,87,53,.05),transparent 22%),
+      repeating-radial-gradient(circle at 30% 30%,rgba(65,45,25,.022) 0 1px,transparent 1px 4px),
+      var(--paper);
+  }
+  .calendar-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+  .calendar-title{font-size:34px;font-weight:900}
+  .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+  .dow{text-align:center;font-size:12px;font-weight:900;color:#8a7d70;padding:8px}
+  .day{
+    aspect-ratio:1/1;border:1px solid rgba(60,51,40,.12);border-radius:15px;
+    background:rgba(255,255,255,.38);padding:8px;cursor:pointer;position:relative;overflow:hidden
+  }
+  .day:hover{transform:translateY(-1px);box-shadow:0 8px 15px rgba(0,0,0,.07)}
+  .day.empty{visibility:hidden}
+  .day.today{outline:2px solid var(--accent)}
+  .day.has-page::after{content:"♥";position:absolute;right:7px;bottom:4px;color:var(--accent);font-size:16px}
+  .day-num{font-weight:900;font-size:14px}
+  .thumb{width:100%;height:calc(100% - 22px);object-fit:cover;border-radius:9px;margin-top:4px}
+  .month-note{margin-top:18px;color:#766b5f;font-size:13px}
+
+  .notebook{
+    position:relative;
+    background:
+      radial-gradient(ellipse at 20% 10%,rgba(255,255,255,.75),transparent 18%),
+      radial-gradient(ellipse at 75% 22%,rgba(117,87,53,.055),transparent 21%),
+      linear-gradient(117deg,transparent 0 28%,rgba(89,63,39,.045) 29%,transparent 31%),
+      repeating-linear-gradient(to bottom,transparent 0 34px,rgba(94,127,180,.13) 34px 35px),
+      repeating-radial-gradient(circle at 30% 30%,rgba(65,45,25,.022) 0 1px,transparent 1px 4px),
+      var(--paper);
+  }
+  .notebook::before{content:"";position:absolute;left:62px;top:0;bottom:0;width:2px;background:rgba(225,111,124,.33)}
+  .holes{position:absolute;left:18px;top:30px;bottom:30px;display:flex;flex-direction:column;justify-content:space-between;z-index:4}
+  .hole{width:18px;height:18px;border-radius:50%;background:#cab89e;box-shadow:inset 0 2px 4px rgba(0,0,0,.28)}
+  .page{position:relative;z-index:2;padding:44px 42px 40px 92px;min-height:680px;display:grid;grid-template-columns:1.15fr .85fr;gap:28px}
+  .upload-area{
+    min-height:460px;border:2px dashed rgba(60,51,40,.25);border-radius:18px;background:rgba(255,255,255,.28);
+    display:flex;align-items:center;justify-content:center;text-align:center;padding:18px;overflow:hidden
+  }
+  .upload-placeholder{color:#74695c;line-height:1.65}
+  .image-stage{width:100%;min-height:430px;display:flex;align-items:center;justify-content:center}
+  .image-stage img{max-width:100%;max-height:520px;object-fit:contain;filter:drop-shadow(0 12px 10px rgba(0,0,0,.12))}
+  .side{display:flex;flex-direction:column;gap:18px}
+  .rating{display:flex;gap:8px}
+  .heart{font-size:34px;border:0;background:transparent;cursor:pointer;color:#c9b9b6;padding:0}
+  .heart.active{color:var(--accent)}
+  .image-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .meta{margin-top:auto;display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:13px;color:#776b61}
+  .pager{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px}
+  .page-count{font-weight:800;background:rgba(255,255,255,.75);padding:9px 13px;border-radius:999px}
+  .install-note{
+    margin:10px 0 16px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.72);
+    color:#5c5148;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.05)
+  }
+
+  @media(max-width:850px){
+    body{padding:10px;padding-top:max(10px, env(safe-area-inset-top));padding-bottom:max(10px, env(safe-area-inset-bottom))}
+    .cover{grid-template-columns:1fr}
+    .cover-preview,.cover-editor{padding:24px}
+    .page{grid-template-columns:1fr;padding:34px 18px 28px 70px}
+    .notebook::before{left:48px}.holes{left:10px}
+    .calendar-view{padding:20px}
+    .calendar-grid{gap:5px}
+    .day{border-radius:10px;padding:5px}
+    .calendar-title{font-size:28px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="title">📔 不哭哭超人日記</div>
+    <div class="actions">
+      <button class="btn soft" id="coverBtn">封面</button>
+      <button class="btn soft" id="calendarBtn">月曆目錄</button>
+      <button class="btn soft" id="pagesBtn">內頁</button>
+      <button class="btn primary" id="todayBtn">＋ 今天</button>
+      <button class="btn install hidden" id="installBtn">安裝 App</button>
+    </div>
+  </div>
+
+  <div class="install-note" id="iosInstallNote">
+    iPhone / iPad：用 Safari 開啟後，點「分享」→「加入主畫面」，就會像 App 一樣出現在桌面。
+  </div>
+
+  <section class="panel cover" id="coverView">
+    <div class="cover-preview">
+      <div class="cover-card">
+        <img id="coverPhoto" class="cover-photo" alt="">
+        <div class="cover-text">
+          <h1 id="coverTitlePreview">不哭哭超人日記</h1>
+          <p id="coverSubtitlePreview">collecting tiny moments ♡</p>
+        </div>
+      </div>
+    </div>
+    <div class="cover-editor">
+      <h2>自製筆記本封面 ✂️</h2>
+      <div class="field"><label>封面標題</label><input id="coverTitle" type="text" value="不哭哭超人日記"></div>
+      <div class="field"><label>封面副標</label><input id="coverSubtitle" type="text" value="collecting tiny moments ♡"></div>
+      <div class="field"><label>封面顏色</label><input id="coverColor" type="color" value="#8e6f5a"></div>
+      <button class="btn" id="coverUploadBtn">上傳封面圖片</button>
+      <input id="coverInput" type="file" accept="image/*" hidden>
+      <button class="btn danger" id="removeCoverPhoto">移除封面圖片</button>
+    </div>
+  </section>
+
+  <section class="panel calendar-view hidden" id="calendarView">
+    <div class="calendar-head">
+      <button class="btn" id="prevMonth">←</button>
+      <div class="calendar-title" id="calendarTitle"></div>
+      <button class="btn" id="nextMonth">→</button>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+    <div class="month-note">有更新的日期會出現 ♥，有照片時會直接顯示縮圖。點日期就能進入那一天的筆記。</div>
+  </section>
+
+  <section class="panel notebook hidden" id="pagesView">
+    <div class="holes">
+      <div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div>
+      <div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div>
+    </div>
+    <div class="page">
+      <div>
+        <div class="upload-area" id="uploadArea">
+          <div class="upload-placeholder" id="uploadPlaceholder">
+            <div style="font-size:48px">🖼️</div>
+            <strong>點一下上傳今天的圖片</strong><br>手機可以直接從相簿選照片
+          </div>
+          <div class="image-stage hidden" id="imageStage"><img id="pageImage" alt=""></div>
+        </div>
+        <input id="imageInput" type="file" accept="image/*" hidden>
+        <div class="image-tools">
+          <button class="btn" id="removeWhiteBtn">✂️ 去白底</button>
+          <button class="btn" id="restoreImageBtn">還原原圖</button>
+        </div>
+      </div>
+      <div class="side">
+        <div class="field"><label>日期</label><input id="pageDate" type="text" disabled></div>
+        <div class="field"><label>今天叫什麼？</label><input id="pageTitle" type="text" placeholder="例如：今天終於把企劃做完了"></div>
+        <div class="field"><label>今日評分</label><div class="rating" id="rating"></div></div>
+        <div class="field"><label>筆記</label><textarea id="pageNote" placeholder="寫下今天發生的事⋯"></textarea></div>
+        <div class="meta"><span id="createdAt"></span><button class="btn danger" id="deleteBtn">刪除此頁</button></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="pager hidden" id="pager">
+    <button class="btn" id="prevPage">← 上一頁</button>
+    <div class="page-count" id="pageCount"></div>
+    <button class="btn" id="nextPage">下一頁 →</button>
+  </div>
+</div>
+
+<script>
+const DB_NAME="paper_diary_pwa_v1", PAGES="pages", SETTINGS="settings";
+let db,pages=[],currentIndex=0,calendarCursor=new Date(), deferredPrompt=null;
+
+const $=id=>document.getElementById(id);
+const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const pretty=s=>new Date(s+"T12:00:00").toLocaleDateString("zh-TW",{year:"numeric",month:"long",day:"numeric",weekday:"short"});
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", ()=>navigator.serviceWorker.register("./sw.js"));
+}
+
+window.addEventListener("beforeinstallprompt", e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  $("installBtn").classList.remove("hidden");
+});
+
+$("installBtn").onclick=async()=>{
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt=null;
+  $("installBtn").classList.add("hidden");
+};
+
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone=window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+if(!isIOS || isStandalone) $("iosInstallNote").classList.add("hidden");
+
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const r=indexedDB.open(DB_NAME,1);
+    r.onupgradeneeded=()=>{
+      const d=r.result;
+      if(!d.objectStoreNames.contains(PAGES))d.createObjectStore(PAGES,{keyPath:"id"});
+      if(!d.objectStoreNames.contains(SETTINGS))d.createObjectStore(SETTINGS,{keyPath:"key"});
+    };
+    r.onsuccess=()=>{db=r.result;resolve()};r.onerror=()=>reject(r.error)
+  })
+}
+function getAll(store){return new Promise((res,rej)=>{const r=db.transaction(store).objectStore(store).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function getOne(store,key){return new Promise((res,rej)=>{const r=db.transaction(store).objectStore(store).get(key);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function put(store,obj){return new Promise((res,rej)=>{const t=db.transaction(store,"readwrite");t.objectStore(store).put(obj);t.oncomplete=res;t.onerror=()=>rej(t.error)})}
+function del(store,key){return new Promise((res,rej)=>{const t=db.transaction(store,"readwrite");t.objectStore(store).delete(key);t.oncomplete=res;t.onerror=()=>rej(t.error)})}
+function newPage(dateStr){return {id:crypto.randomUUID(),date:dateStr,title:"",note:"",rating:0,image:null,originalImage:null,createdAt:new Date().toISOString()}}
+function fileToDataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
+function sortPages(){pages.sort((a,b)=>a.date.localeCompare(b.date))}
+function findByDate(dateStr){return pages.findIndex(p=>p.date===dateStr)}
+
+async function openDate(dateStr){
+  let i=findByDate(dateStr);
+  if(i<0){
+    const p=newPage(dateStr);pages.push(p);sortPages();await put(PAGES,p);i=findByDate(dateStr)
+  }
+  currentIndex=i;showPages();renderPage()
+}
+function renderHearts(v){
+  $("rating").innerHTML="";
+  for(let i=1;i<=5;i++){
+    const b=document.createElement("button");b.className="heart"+(i<=v?" active":"");b.textContent="♥";
+    b.onclick=async()=>{pages[currentIndex].rating=i;await put(PAGES,pages[currentIndex]);renderHearts(i);renderCalendar()};
+    $("rating").appendChild(b)
+  }
+}
+function renderPage(){
+  const p=pages[currentIndex];
+  $("pageDate").value=pretty(p.date);$("pageTitle").value=p.title||"";$("pageNote").value=p.note||"";
+  $("createdAt").textContent="建立於 "+new Date(p.createdAt).toLocaleString("zh-TW",{dateStyle:"medium",timeStyle:"short"});
+  $("pageCount").textContent=`第 ${currentIndex+1} 頁 / 共 ${pages.length} 頁`;
+  $("prevPage").disabled=currentIndex===0;$("nextPage").disabled=currentIndex===pages.length-1;
+  renderHearts(p.rating||0);
+  if(p.image){$("pageImage").src=p.image;$("imageStage").classList.remove("hidden");$("uploadPlaceholder").classList.add("hidden")}
+  else{$("pageImage").src="";$("imageStage").classList.add("hidden");$("uploadPlaceholder").classList.remove("hidden")}
+}
+async function saveText(){
+  const p=pages[currentIndex];p.title=$("pageTitle").value;p.note=$("pageNote").value;await put(PAGES,p);renderCalendar()
+}
+let timer;
+["pageTitle","pageNote"].forEach(id=>$(id).addEventListener("input",()=>{clearTimeout(timer);timer=setTimeout(saveText,250)}));
+
+$("uploadArea").onclick=()=>$("imageInput").click();
+$("imageInput").onchange=async e=>{const f=e.target.files[0];if(f){const data=await fileToDataURL(f);const p=pages[currentIndex];p.image=data;p.originalImage=data;await put(PAGES,p);renderPage();renderCalendar()}};
+
+function removeWhite(dataURL,threshold=238){
+  return new Promise((res,rej)=>{
+    const img=new Image();img.onload=()=>{
+      const c=document.createElement("canvas");c.width=img.naturalWidth;c.height=img.naturalHeight;
+      const x=c.getContext("2d");x.drawImage(img,0,0);const im=x.getImageData(0,0,c.width,c.height),d=im.data;
+      for(let i=0;i<d.length;i+=4){const min=Math.min(d[i],d[i+1],d[i+2]),max=Math.max(d[i],d[i+1],d[i+2]);if(min>threshold&&(max-min)<20)d[i+3]=0}
+      x.putImageData(im,0,0);res(c.toDataURL("image/png"))
+    };img.onerror=rej;img.src=dataURL
+  })
+}
+$("removeWhiteBtn").onclick=async()=>{const p=pages[currentIndex];if(!p.image)return alert("先上傳圖片～");p.image=await removeWhite(p.originalImage||p.image);await put(PAGES,p);renderPage();renderCalendar()}
+$("restoreImageBtn").onclick=async()=>{const p=pages[currentIndex];if(!p.originalImage)return;p.image=p.originalImage;await put(PAGES,p);renderPage();renderCalendar()}
+$("deleteBtn").onclick=async()=>{if(!confirm("確定刪除這一天嗎？"))return;const id=pages[currentIndex].id;await del(PAGES,id);pages.splice(currentIndex,1);renderCalendar();showCalendar()}
+$("prevPage").onclick=()=>{if(currentIndex>0){currentIndex--;renderPage()}}
+$("nextPage").onclick=()=>{if(currentIndex<pages.length-1){currentIndex++;renderPage()}}
+
+function renderCalendar(){
+  const y=calendarCursor.getFullYear(),m=calendarCursor.getMonth();
+  $("calendarTitle").textContent=`${y} 年 ${m+1} 月`;
+  const grid=$("calendarGrid");grid.innerHTML="";
+  ["日","一","二","三","四","五","六"].forEach(x=>{const d=document.createElement("div");d.className="dow";d.textContent=x;grid.appendChild(d)});
+  const first=new Date(y,m,1),days=new Date(y,m+1,0).getDate(),start=first.getDay();
+  for(let i=0;i<start;i++){const e=document.createElement("div");e.className="day empty";grid.appendChild(e)}
+  const today=ymd(new Date());
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`, idx=findByDate(ds), p=idx>=0?pages[idx]:null;
+    const cell=document.createElement("div");cell.className="day"+(ds===today?" today":"")+(p?" has-page":"");
+    const n=document.createElement("div");n.className="day-num";n.textContent=d;cell.appendChild(n);
+    if(p?.image){const img=document.createElement("img");img.className="thumb";img.src=p.image;cell.appendChild(img)}
+    cell.onclick=()=>openDate(ds);grid.appendChild(cell)
+  }
+}
+$("prevMonth").onclick=()=>{calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()-1,1);renderCalendar()}
+$("nextMonth").onclick=()=>{calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+1,1);renderCalendar()}
+
+function hideAll(){["coverView","calendarView","pagesView"].forEach(id=>$(id).classList.add("hidden"));$("pager").classList.add("hidden")}
+function showCover(){hideAll();$("coverView").classList.remove("hidden")}
+function showCalendar(){hideAll();$("calendarView").classList.remove("hidden");renderCalendar()}
+function showPages(){hideAll();$("pagesView").classList.remove("hidden");$("pager").classList.remove("hidden")}
+$("coverBtn").onclick=showCover;$("calendarBtn").onclick=showCalendar;$("pagesBtn").onclick=()=>{if(pages.length){showPages();renderPage()}else openDate(ymd(new Date()))}
+$("todayBtn").onclick=()=>openDate(ymd(new Date()));
+
+const coverDefaults={title:"不哭哭超人日記",subtitle:"collecting tiny moments ♡",color:"#8e6f5a",photo:null};
+async function loadCover(){const s=await getOne(SETTINGS,"cover"),c=s?.value||coverDefaults;applyCover(c);$("coverTitle").value=c.title;$("coverSubtitle").value=c.subtitle;$("coverColor").value=c.color}
+function applyCover(c){
+  document.documentElement.style.setProperty("--cover",c.color);$("coverTitlePreview").textContent=c.title;$("coverSubtitlePreview").textContent=c.subtitle;
+  if(c.photo){$("coverPhoto").src=c.photo;$("coverPhoto").style.display="block"}else{$("coverPhoto").style.display="none"}
+}
+async function saveCover(partial){const old=(await getOne(SETTINGS,"cover"))?.value||coverDefaults,c={...old,...partial};await put(SETTINGS,{key:"cover",value:c});applyCover(c)}
+$("coverTitle").oninput=e=>saveCover({title:e.target.value});$("coverSubtitle").oninput=e=>saveCover({subtitle:e.target.value});$("coverColor").oninput=e=>saveCover({color:e.target.value});
+$("coverUploadBtn").onclick=()=>$("coverInput").click();$("coverInput").onchange=async e=>{const f=e.target.files[0];if(f)saveCover({photo:await fileToDataURL(f)})};$("removeCoverPhoto").onclick=()=>saveCover({photo:null});
+
+(async()=>{await openDB();pages=await getAll(PAGES);sortPages();await loadCover();calendarCursor=new Date();showCalendar()})();
+</script>
+</body>
+</html>
